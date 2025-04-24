@@ -1,0 +1,5 @@
+numpy>=1.21
+scipy>=1.7
+pywavelets>=1.3
+matplotlib>=3.5
+soundfile>=0.12   # for non-PCM WAV and FLAC/OGG
