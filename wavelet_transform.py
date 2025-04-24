@@ -1,9 +1,32 @@
 """
 wavelet_transform.py
---------------------
-Fast Continuous Wavelet Transform utilities + optional FFT overlay.
+====================
+A compact helper for **Continuous Wavelet Transform (CWT)** analysis of 1-D signals
+(e.g. WAV audio).  Highlights:
 
-    python wavelet_transform.py AUDIO.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
+* Robust path handling – pass either a **.wav file** or a **directory** that
+  contains exactly one WAV.
+* Fast CWT via *PyWavelets* with 50 log-spaced scales by default
+  (≈ the settings in the “quick” handwritten demo).
+* Optional FFT overlay → two-panel figure (scalogram + magnitude spectrum).
+* CLI flags for wavelet family/parameters, scale count, cropping, FFT, headless
+  mode, and NumPy *.cwt.npy* export.
+* Pure-Python and dependency-light: NumPy ≥ 1.21, SciPy ≥ 1.7,
+  PyWavelets ≥ 1.3, Matplotlib ≥ 3.5.
+
+Example — as a **library**
+
+```python
+from wavelet_transform import WaveletTransform
+
+wt = WaveletTransform("samples/Katydid.wav")
+sr, sig          = wt.load_audio(crop_seconds=5)         # 5-s window
+coefs, freqs_hz  = wt.cwt(sig, sr, wavelet="cmor1.5-1.0")
+wt.plot_cwt_and_fft(coefs, freqs_hz, sr, sig)            # 2-panel plot
+```
+
+Command line use:
+    python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
 """
 
 from __future__ import annotations
@@ -24,14 +47,70 @@ from scipy.io import wavfile
 #  Helper class                                                         #
 # --------------------------------------------------------------------- #
 class WaveletTransform:
-    """Compute CWT (and FFT) on 1-D signals with robust WAV handling."""
+    """
+    Lightweight wrapper that bundles **loading**, **CWT / FFT computation**
+    and **plot helpers** for a single 1-D WAV signal.
+
+    ----------
+    Parameters
+    ----------
+    audio_location : str | pathlib.Path
+        Either of the following is accepted –
+
+        • Path to a single **.wav** file *or*
+        • Directory that contains **exactly one** ``*.wav`` file
+          (useful for quick demos: that file is auto-selected).
+
+    ----------
+    Notes
+    -----
+    * When given a directory the first and only WAV is resolved and stored in
+      :pyattr:`self.audio_file`; otherwise the provided file path is used.
+    * All heavy work happens lazily:
+        - :py:meth:`load_audio` decodes, normalises (±1), stereo→mono and
+          optionally time-crops the signal.
+        - :py:meth:`cwt` computes the continuous wavelet transform and converts
+          scale→frequency (Hz).
+        - :py:meth:`fft` returns the positive-frequency magnitude spectrum.
+    * Plot helpers (`plot_scalogram`, `plot_cwt_and_fft`) visualise the data
+      with sensible defaults and a colour-bar.
+    * The complementary :py:meth:`cli` classmethod turns the module into a
+      one-shot command-line utility:
+
+        ``python wavelet_transform.py <file_or_dir> [--wavelet morl] [--fft]``
+
+    The class is intentionally minimal—no external state beyond the resolved
+    WAV path—so it’s easy to instantiate repeatedly inside batch pipelines.
+    """
 
     # ---------- construction ----------------------------------------- #
     def __init__(self, audio_location: str | Path):
+        """
+        Create a :class:`WaveletTransform` and verify *audio_location*.
+        """
+
         self.audio_file = self._resolve_audio_file(audio_location)
 
     @staticmethod
     def _resolve_audio_file(location: str | Path) -> Path:
+        """
+        Return an **absolute** path to a WAV file or raise a clear error.
+
+        * If *location* points at a directory:
+        * exactly one ``*.wav`` must exist – that file is returned.
+        * If *location* points at a file:
+        * it must exist and have suffix ``.wav``.
+
+        Raises
+        ------
+        FileNotFoundError
+            No WAV in directory / file does not exist.
+        FileExistsError
+            Directory contained multiple WAVs (ambiguous).
+        ValueError
+            File exists but is not a ``.wav`` container.
+        """
+
         loc = Path(location).expanduser().resolve()
 
         if loc.is_dir():
@@ -54,19 +133,39 @@ class WaveletTransform:
     def load_audio(
         self, *, crop_seconds: int | float | None = None
     ) -> Tuple[int, NDArray[np.floating]]:
+        """
+        Read the WAV file, convert to **mono float32 in [-1, 1]**, optionally
+        return only the first *crop_seconds* seconds.
+
+        Parameters
+        ----------
+        crop_seconds : int | float | None, default ``None``
+            If given, truncates the decoded signal to that many seconds.  Use
+            this to speed up exploratory plots or conserve RAM.
+
+        Returns
+        -------
+        sr : int
+            Sample-rate in Hz.
+        signal : numpy.ndarray[float32]
+            1-D mono waveform, already normalised to ±1.
+
+        Notes
+        -----
+        • Integer PCM (e.g. ``int16``) is divided by its full-scale max.
+        • Multichannel audio is averaged to mono.
+        """
+
         sr, data = wavfile.read(self.audio_file)
 
-        # normalise ints to ±1
         if data.dtype.kind in "iu":
             data = data.astype(np.float32) / np.iinfo(data.dtype).max
         elif data.dtype != np.float32:
             data = data.astype(np.float32)
 
-        # stereo → mono
         if data.ndim == 2:
             data = data.mean(axis=1)
 
-        # optional crop
         if crop_seconds is not None:
             samples = int(sr * crop_seconds)
             data = data[:samples]
@@ -82,8 +181,31 @@ class WaveletTransform:
         wavelet: str = "morl",
         scales: Sequence[float] | None = None,
     ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
+        """
+        Compute a **continuous wavelet transform**.
+
+        Parameters
+        ----------
+        signal : ndarray
+            1-D mono waveform.
+        sr : int
+            Sample-rate (Hz).
+        wavelet : str, default ``"morl"``
+            Any name returned by ``pywt.wavelist(kind="continuous")`` – e.g.
+            ``"cmor1.5-1.0"``, ``"gaus4"``, ``"mexh"``.
+        scales : sequence of float | None
+            List/array of scales.  If ``None``  →  50 log-spaced scales
+            ``np.geomspace(1,512,50)``.
+
+        Returns
+        -------
+        coeffs : ndarray[complex128]  (n_scales × n_samples)
+            CWT coefficients.
+        freqs_hz : ndarray[float]     (n_scales,)
+            Centre frequency of each scale **in Hz**.
+        """
+
         if scales is None:
-            # 50 log-spaced scales ≈ geomspace in the old fast script
             scales = np.geomspace(1, 512, num=50)
         else:
             scales = np.asarray(scales, dtype=float)
@@ -98,6 +220,24 @@ class WaveletTransform:
         signal: NDArray[np.floating],
         sr: int,
     ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
+        """
+        Return the **positive-frequency half** of the FFT magnitude spectrum.
+
+        Parameters
+        ----------
+        signal : ndarray
+            1-D time-domain signal.
+        sr : int
+            Sample-rate (Hz).
+
+        Returns
+        -------
+        freqs : ndarray[float]
+            Positive frequency bins (Hz).
+        magnitude : ndarray[float]
+            |FFT(signal)| matching *freqs*.
+        """
+
         n = signal.size
         fft_data = np.fft.fft(signal)
         freqs = np.fft.fftfreq(n, d=1 / sr)
@@ -115,6 +255,23 @@ class WaveletTransform:
         title: str = "CWT Scalogram",
         cmap: str | None = None,
     ) -> None:
+        """
+        Display a **log-frequency scalogram** with a colour-bar.
+
+        Parameters
+        ----------
+        coeffs, freqs : ndarray
+            Output of :py:meth:`cwt`.
+        sr : int
+            Sample-rate (Hz) – used to convert sample index to seconds.
+        t_start : float, default 0.0
+            Offset for the x-axis (useful when plotting successive windows).
+        title : str
+            Figure title.
+        cmap : str | None
+            Colormap forwarded to ``matplotlib.pyplot.pcolormesh``.
+        """
+
         t = np.arange(coeffs.shape[1]) / sr + t_start
         fig, ax = plt.subplots(figsize=(12, 5))
         pcm = ax.pcolormesh(t, freqs, np.abs(coeffs), shading="auto", cmap=cmap)
@@ -137,6 +294,15 @@ class WaveletTransform:
         title: str = "Continuous Wavelet Transform (Scalogram)",
         cmap: str | None = None,
     ) -> None:
+        """
+        Two-panel figure: **scalogram** (top) + **FFT magnitude** (bottom).
+
+        Useful for quick “what frequencies are present?” diagnostics.
+
+        Parameters are identical to :py:meth:`plot_scalogram` with the addition
+        of *signal* – the raw time-domain samples for the FFT panel.
+        """
+
         t = np.arange(coeffs.shape[1]) / sr + t_start
         f_fft, mag_fft = WaveletTransform.fft(signal, sr)
 
@@ -160,6 +326,22 @@ class WaveletTransform:
     # ---------- CLI --------------------------------------------------- #
     @staticmethod
     def cli() -> None:
+        """
+        Parse ``sys.argv`` and run **one-shot analysis**.
+
+        Flags
+        -----
+        * ``location``   – WAV file or directory containing one
+        * ``--wavelet``  – continuous wavelet name (default *morl*)
+        * ``--scales``   – number of log-spaced scales (default 50)
+        * ``--seconds``  – crop first *N* seconds before analysis
+        * ``--fft``      – add FFT subplot beneath scalogram
+        * ``--no-plot``  – skip plotting, still save ``.cwt.npy``
+
+        A NumPy array of CWT coefficients is always saved next to the input file
+        as ``<audio>.cwt.npy`` for downstream processing.
+        """
+
         parser = argparse.ArgumentParser(description="Quick CWT demo + optional FFT")
         parser.add_argument("location", help="WAV file or directory containing one")
         parser.add_argument("--wavelet", default="morl", help="PyWavelets CWT name")
@@ -192,7 +374,8 @@ class WaveletTransform:
                 wt.plot_scalogram(coeffs, freqs, sr, title=args.location)
 
     # ---------- repr -------------------------------------------------- #
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: D401
+        """Return ``WaveletTransform(audio_file=<path>)`` for quick introspection."""
         return f"WaveletTransform(audio_file={self.audio_file!s})"
 
 
