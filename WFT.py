@@ -16,6 +16,8 @@ duration = 1.0      # Signal duration (seconds)
 window_type = 'hann'
 window_size = 50   # WFT window size
 
+# Hej
+
 # === Generate sine wave ===
 t = np.linspace(0, duration, int(fs * duration), endpoint=False)
 signal = np.sin(50.0 * 2.0*np.pi*t) + 0.5*np.sin(80.0 * 2.0*np.pi*t)
