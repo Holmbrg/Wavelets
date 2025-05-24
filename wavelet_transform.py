@@ -29,6 +29,8 @@ Command line use:
     python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
 """
 
+# Test
+
 from __future__ import annotations
 
 import argparse
