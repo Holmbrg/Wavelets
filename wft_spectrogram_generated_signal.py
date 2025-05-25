@@ -8,7 +8,7 @@ duration = 1.0      # Signal duration (seconds)
 window_type = 'hann'
 window_size = 200   # WFT window size
 function_freq = 50
-function_type = 'noisy_sine' # Choose 'sine_wave', 'chirp' or 'noisy_sine'
+function_type = 'chirp' # Choose 'sine_wave', 'chirp' or 'noisy_sine'
 
 def get_signal():
 
@@ -27,7 +27,7 @@ signal = get_signal()
 wft_freqs, wft_times, wft_coeffs = sgn.stft(signal, fs, window_type, window_size)
 
 # PLOTTING
-fig, axs = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+fig, axs = plt.subplots(2, 1, figsize=(12, 12), sharex=False)
 
 # Plot original signal
 axs[0].plot(t, signal)
@@ -41,7 +41,9 @@ im1 = axs[1].imshow(np.abs(wft_coeffs), aspect='auto',
                     origin='lower', cmap='viridis')
 axs[1].set_title("Windowed Fourier Transform (Spectrogram)")
 axs[1].set_ylabel("Frequency [Hz]")
-fig.colorbar(im1, ax=axs[1], label='Magnitude')
+#fig.colorbar(im1, ax=axs[1], label='Magnitude')
 
 plt.tight_layout()
+fig.subplots_adjust(hspace=0.3)
+
 plt.show()
