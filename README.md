@@ -9,7 +9,7 @@ Powered by **NumPy · SciPy · PyWavelets · Matplotlib**.
 
 - Robust path-handling (file or directory) & WAV loading (int/float, stereo→mono)
 - Fast CWT via PyWavelets, plus scale→frequency conversion in Hz
-- Publication-quality **scalogram** plot with log-frequency axis and colour-bar
+- **scalogram** plot with log-frequency axis and colour-bar
 - One-file turnkey CLI _or_ import as a library
 - Pure-Python, no compiled extensions
 
