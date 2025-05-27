@@ -20,7 +20,7 @@ Powered by **NumPy · SciPy · PyWavelets · Matplotlib · Torch · Transformers
 
 ```bash
 # 1 – clone the repository
-git clone https://github.com/your-org/wavelet-cwt.git
+git clone https://github.com/your-org/Wavelets.git
 cd wavelet-cwt
 
 # 2 – create & activate a fresh venv  (optional but recommended)
@@ -33,16 +33,20 @@ source .venv/bin/activate
 # 3 – install dependencies
 pip install -r requirements.txt
 
-# 4 – run the demo
-python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
+# 4 – run the demo cwt scalogram of audio file
+python cwt_scalogram_audiofile.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
 ```
 
 ## Comments
 
 To run:
-python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
+python cwt_scalogram_audiofile.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
 
-You'll need to open a terminal run: cd "path/to/wavelet-cwt", then run the above command.
+Set up the .venv (as seen under "Quick start") OR install the dependencies under requirements.txt 
+with pip on your own version of python.
+You'll then need to open a terminal run: cd "path/to/Wavelets" (replace with the actual path, 
+then run the above command.
+
 You can adjust the following:
 
 - samples/Katydid.wav <=> Choose between samples/Katydid.wav, samples/RedeyedVireo.wav, samples/Gibbon.wav
@@ -81,4 +85,4 @@ You can adjust the following:
 
 - finally, for --fft ~ this is an optional boolean flag, meaning if you want an fft on top of
   the scalogram you can add this part to the end of the command, else, exclude it, like such:
-  python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5
+  python cwt_scalogram_audiofile.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5
