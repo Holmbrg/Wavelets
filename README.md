@@ -1,6 +1,7 @@
 # Wavelet-CWT
 
-A tiny, self-contained Python helper for computing and visualising the **Continuous Wavelet Transform (CWT)** on 1-D signals such as audio waveforms.  
+Python helper for computing and visualising the **Continuous Wavelet Transform (CWT)** on 1-D signals such as audio waveforms.  
+And for computing the **Discrete Wavelet Transform** in regards to Neural Network Compression and inference after compression.
 Powered by **NumPy · SciPy · PyWavelets · Matplotlib**.
 
 ---
