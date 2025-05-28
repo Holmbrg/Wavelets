@@ -7,8 +7,8 @@ import pywt
 fs = 1000           # Sampling frequency (Hz)
 duration = 1.0      # Signal duration (seconds)
 window_type = 'hann'
-window_size = 200   # WFT window size
-function_freq = 50
+window_size = 100   # WFT window size
+function_freq = 70
 function_type = 'chirp' # Choose 'sine_wave', 'chirp' or 'noisy_sine'
 
 def get_signal():
@@ -34,16 +34,26 @@ fft_coeffs = np.fft.fft(signal) # Returns the fft coefficients
 fft_magnitudes = np.abs(fft_coeffs) / N
 
 # === Plotting ===
+
+# First plot: the signal
+plt.figure(figsize=(10, 4))
+plt.plot(t, signal)
+plt.title('Signal')
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Second plot: FFT magnitude and WFT spectrogram
 fig, axs = plt.subplots(2, 1, figsize=(12, 10), sharex=False)
 
-# Plot FFT magnitude
 axs[0].plot(freq_bins, fft_magnitudes)
 axs[0].set_title("FFT")
 axs[0].set_xlabel("Frequency [Hz]")
 axs[0].set_ylabel("Magnitude")
 axs[0].set_xlim(0, 500)
 
-# Plot WFT spectrogram
 im1 = axs[1].imshow(np.abs(wft_coeffs), aspect='auto',
                     extent=[wft_times[0], wft_times[-1], wft_freqs[0], wft_freqs[-1]],
                     origin='lower', cmap='viridis')
