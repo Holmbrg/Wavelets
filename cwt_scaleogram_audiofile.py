@@ -1,5 +1,5 @@
 """
-wavelet_transform.py
+cwt_scalogram_audiofile.py
 ====================
 A compact helper for **Continuous Wavelet Transform (CWT)** analysis of 1-D signals
 (e.g. WAV audio).  Highlights:
@@ -17,7 +17,7 @@ A compact helper for **Continuous Wavelet Transform (CWT)** analysis of 1-D sign
 Example — as a **library**
 
 ```python
-from wavelet_transform import WaveletTransform
+from cwt_scalogram_audiofile import WaveletTransform
 
 wt = WaveletTransform("samples/Katydid.wav")
 sr, sig          = wt.load_audio(crop_seconds=5)         # 5-s window
@@ -26,7 +26,7 @@ wt.plot_cwt_and_fft(coefs, freqs_hz, sr, sig)            # 2-panel plot
 ```
 
 Command line use:
-    python wavelet_transform.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
+    python cwt_scalogram_audiofile.py samples/Katydid.wav --wavelet cmor1.5-1.0 --seconds 5 --fft
 """
 
 # Hej :)
@@ -79,7 +79,7 @@ class WaveletTransform:
     * The complementary :py:meth:`cli` classmethod turns the module into a
       one-shot command-line utility:
 
-        ``python wavelet_transform.py <file_or_dir> [--wavelet morl] [--fft]``
+        ``python cwt_scalogram_audiofile.py <file_or_dir> [--wavelet morl] [--fft]``
 
     The class is intentionally minimal—no external state beyond the resolved
     WAV path—so it’s easy to instantiate repeatedly inside batch pipelines.
