@@ -9,7 +9,7 @@ from scipy import signal
 import math
 
 
-def main_denoise_tit(z: list[float], wavelet: str, uni_or_adap: str, hard_or_soft: str, noise_level_perc: float) -> None:
+def main_denoise_tit(z: list[float], wavelet: str, uni_or_adap: str, hard_or_soft: str, noise_level_perc: float=75) -> None:
     """Takes true signal and adds noise corresponding to noise_level_perc (perc. of abs. mean of signal).
     Choose 'uni', 'uni_perc' or 'adap' and 'hard' or 'soft' thresholding"""
 
@@ -295,7 +295,7 @@ def denoise_wavl_uniperc_soft(wavelet_coef: list[list[float]], perc: float) -> l
     return denoised
 
 
-def wft_tit(z: list[float], noise_level_perc: float, thresh: float) -> None:
+def wft_tit(z: list[float], perc: float, noise_level_perc: float = 75) -> None:
     """Adds noise to musvit.wav corresponding to noise_level_perc
     (perc. of abs. mean of z). Denoises by keeping thresh % largest coefficients
     of the WFT"""
@@ -310,15 +310,15 @@ def wft_tit(z: list[float], noise_level_perc: float, thresh: float) -> None:
 
     f, t, Zxx = signal.stft(noisy_signal, samplerate, 'hann', nperseg=256, noverlap=256//2)
 
-    thresh = np.percentile(np.abs(Zxx), 100-thresh)
+    thresh = np.percentile(np.abs(Zxx), 100-perc)
 
     for i in range(len(f)):
         for j in range(len(t)):
             if abs(Zxx[i,j]) <= thresh:
                 Zxx[i,j] = 0
-            else:                           #Comment out this else to use hard thresholding.
-                angle = np.angle(Zxx[i,j])
-                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
+##            else:                           #Comment out this else to use hard thresholding.
+##                angle = np.angle(Zxx[i,j])
+##                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
 
                 
     t, denoised_audio = signal.istft(Zxx, samplerate, 'hann', nperseg=256, noverlap=256//2)
@@ -336,7 +336,7 @@ def wft_tit(z: list[float], noise_level_perc: float, thresh: float) -> None:
     print('MSE = ' + str(MSE))
     
     plt.plot(time ,denoised_audio)
-    plt.title('Great tit denoised, soft uni. 1%, WFT')
+    plt.title('Great tit denoised, soft uni.' + str(perc)+'%, ' +'WFT')
     plt.ylabel('Amplitude')
     plt.xlabel('Time [s]')
     plt.show()
@@ -346,7 +346,7 @@ def wft_tit(z: list[float], noise_level_perc: float, thresh: float) -> None:
 
 
 
-def wft_speech(z: list[float], thresh: float) -> None:
+def wft_speech(z: list[float], perc: float) -> None:
     """Denoises speech in loud office by keeping thresh % largest coefficients
     of the WFT"""
 
@@ -359,7 +359,7 @@ def wft_speech(z: list[float], thresh: float) -> None:
 
     f, t, Zxx = signal.stft(noisy_signal, samplerate, 'hann', nperseg=256, noverlap=256//2)
 
-    thresh = np.percentile(np.abs(Zxx), 100-thresh)
+    thresh = np.percentile(np.abs(Zxx), 100-perc)
 
     for i in range(len(f)):
         for j in range(len(t)):
@@ -385,7 +385,7 @@ def wft_speech(z: list[float], thresh: float) -> None:
     print('MSE = ' + str(MSE))
     
     plt.plot(time ,denoised_audio)
-    plt.title('Speech denoised, soft uni. 1%, WFT')
+    plt.title('Speech denoised, soft uni. '+ str(perc)+'%, '+ 'WFT')
     plt.ylabel('Amplitude')
     plt.xlabel('Time [s]')
     plt.show()
