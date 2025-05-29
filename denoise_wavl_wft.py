@@ -86,6 +86,14 @@ def main_denoise_speech(z: list[float], wavelet: str, uni_or_adap: str, hard_or_
             denoised_audio = idwt(denoise_wavl_uni_soft(dwt(noisy_signal, wavelet),len(z), 0), wavelet)
         else:
             print('Invalid input: Write "hard" or "soft"')
+    elif uni_or_adap == 'uni_perc':
+        thresh = float(input('Enter largest percentile of coeffs to keep: '))
+        if hard_or_soft == 'hard':
+            denoised_audio = idwt(denoise_wavl_uniperc_hard(dwt(noisy_signal, wavelet),thresh), wavelet)
+        elif hard_or_soft == 'soft':
+            denoised_audio = idwt(denoise_wavl_uniperc_soft(dwt(noisy_signal, wavelet),thresh), wavelet)
+        else:
+            print('Invalid input: Write "hard" or "soft"')
     elif uni_or_adap == 'adap':
         thresh = float(input('Enter largest percentile to keep for each scale: '))
         if hard_or_soft == 'hard':
@@ -109,7 +117,7 @@ def main_denoise_speech(z: list[float], wavelet: str, uni_or_adap: str, hard_or_
     print('MSE = ' + str(MSE))
 
     plt.plot(time ,denoised_audio)
-    plt.title('Speech denoised, soft adap. 10%, Haar')
+    plt.title('Speech denoised, ' + str(hard_or_soft)+' ' + str(uni_or_adap)+'. ' + str(thresh)+'%, ' + str(wavelet))
     plt.ylabel('Amplitude')
     plt.xlabel('Time [s]')
     plt.show()
@@ -357,9 +365,9 @@ def wft_speech(z: list[float], thresh: float) -> None:
         for j in range(len(t)):
             if abs(Zxx[i,j]) <= thresh:
                 Zxx[i,j] = 0
-            else:
-                angle = np.angle(Zxx[i,j])
-                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
+##            else:
+##                angle = np.angle(Zxx[i,j])
+##                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
 
                 
     t, denoised_audio = signal.istft(Zxx, samplerate, 'hann', nperseg=256, noverlap=256//2)
