@@ -9,7 +9,7 @@ import os
 fs = 1000           # Sampling frequency (Hz)
 duration = 1.0      # Signal duration (seconds)
 window_type = 'hann' # WFT window shape
-window_size = 200   # WFT window size
+window_size = 50   # WFT window size
 wavelet = "cmor1.5-1.0"
 scales = np.geomspace(1, 512, num=100)
 
@@ -60,11 +60,11 @@ im1 = axs[0].imshow(np.abs(wft_coeffs), aspect='auto',
                     extent=[wft_times[0], wft_times[-1], wft_freqs[0], wft_freqs[-1]],
                     origin='lower', cmap='viridis')
 axs[0].set_title("Windowed Fourier Transform (Spectrogram)")
-axs[0].set_ylim([0,10000])
+axs[0].set_ylim([0,5000])
 axs[0].set_ylabel("Frequency [Hz]")
 
 pcm = axs[1].pcolormesh(t, cwt_freqs, np.abs(cwt_coeffs))
-axs[1].set_ylim([0,10000])
+axs[1].set_ylim([0,5000])
 axs[1].set_yscale("linear")
 axs[1].set_xlabel("Time (s)")
 axs[1].set_ylabel("Frequency (Hz)")

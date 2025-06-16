@@ -48,11 +48,11 @@ plt.show()
 # Second plot: FFT magnitude and WFT spectrogram
 fig, axs = plt.subplots(2, 1, figsize=(12, 10), sharex=False)
 
-axs[0].plot(freq_bins, fft_magnitudes)
+axs[0].plot(freq_bins[:N//2], fft_magnitudes[:N//2])
 axs[0].set_title("FFT")
 axs[0].set_xlabel("Frequency [Hz]")
 axs[0].set_ylabel("Magnitude")
-axs[0].set_xlim(0, 500)
+axs[0].set_xlim(0, 200)
 
 im1 = axs[1].imshow(np.abs(wft_coeffs), aspect='auto',
                     extent=[wft_times[0], wft_times[-1], wft_freqs[0], wft_freqs[-1]],

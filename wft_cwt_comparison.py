@@ -10,7 +10,7 @@ fs = 1000           # Sampling frequency (Hz)
 duration = 1.0      # Signal duration (seconds)
 window_type = 'hann' # WFT window shape
 window_size = 200   # WFT window size
-function_freq = 50 # Base frequency of input signal
+function_freq = 70 # Base frequency of input signal
 function_type = 'chirp' # Choose 'sine_wave', 'chirp' or 'noisy_sine'
 wavelet = "cmor1.5-1.0"
 scales = np.geomspace(1, 512, num=200)
@@ -46,7 +46,6 @@ im1 = axs[0].imshow(np.abs(wft_coeffs), aspect='auto',
 axs[0].set_title("Windowed Fourier Transform (Spectrogram)")
 axs[0].set_ylim([0,400])
 axs[0].set_ylabel("Frequency [Hz]")
-#fig.colorbar(im1, ax=axs[0], label='Magnitude')
 
 pcm = axs[1].pcolormesh(t, cwt_freqs, np.abs(cwt_coeffs))
 axs[1].set_ylim([0,400])
