@@ -6,10 +6,8 @@ from scipy import signal as sgn
 import os
 
 # Parameters
-fs = 1000           # Sampling frequency (Hz)
-duration = 1.0      # Signal duration (seconds)
 window_type = 'hann' # WFT window shape
-window_size = 50   # WFT window size
+window_size = 1200   # WFT window size
 wavelet = "cmor1.5-1.0"
 scales = np.geomspace(1, 512, num=100)
 
@@ -40,7 +38,6 @@ wft_freqs, wft_times, wft_coeffs = sgn.stft(data, fs, window_type, window_size)
 # Compute CWT
 cwt_coeffs, cwt_freqs = pywt.cwt(data, scales, wavelet, 1.0 / fs)
 
-
 # --- PLOTTING --- #
 
 # First plot: the signal
@@ -56,19 +53,21 @@ plt.show()
 # Second plot: WFT and CWT
 fig, axs = plt.subplots(2, 1, figsize=(9, 9), sharex=False)
 
-im1 = axs[0].imshow(np.abs(wft_coeffs), aspect='auto',
-                    extent=[wft_times[0], wft_times[-1], wft_freqs[0], wft_freqs[-1]],
-                    origin='lower', cmap='viridis')
-axs[0].set_title("Windowed Fourier Transform (Spectrogram)")
-axs[0].set_ylim([0,5000])
+# PLOT 1: WFT (STFT)
+axs[0].imshow(np.abs(wft_coeffs), aspect='auto',
+              extent=[wft_times[0], wft_times[-1], wft_freqs[0], wft_freqs[-1]],
+              origin='lower', cmap='viridis')
+axs[0].set_title("WFT Spectrogram (window size " + str(window_size) + " out of " + str(len(data)) + ")")
+axs[0].set_ylim([0, fs // 2])
 axs[0].set_ylabel("Frequency [Hz]")
 
-pcm = axs[1].pcolormesh(t, cwt_freqs, np.abs(cwt_coeffs))
-axs[1].set_ylim([0,5000])
-axs[1].set_yscale("linear")
+# PLOT 2: CWT
+axs[1].pcolormesh(t, cwt_freqs, np.abs(cwt_coeffs), shading="auto", cmap="viridis")
+axs[1].set_title("CWT Scaleogram")
+axs[1].set_ylim([0, fs // 2])
 axs[1].set_xlabel("Time (s)")
-axs[1].set_ylabel("Frequency (Hz)")
-axs[1].set_title("Continuous Wavelet Transform (Scaleogram)")
+axs[1].set_ylabel("Frequency [Hz]")
+
 
 plt.tight_layout()
 fig.subplots_adjust(hspace=0.3)
