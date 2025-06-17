@@ -8,7 +8,11 @@ import os
 wavelet = "cmor1.5-1.0"
 
 # Load the .wav file
-fs, data = wavfile.read(r'C:\Users\45298\Desktop\wavelet_programmer\Katydid.wav')
+fs, data = wavfile.read(r'C:\Users\45298\Documents\GitHub\wavelet-cwt\samples\nattergal.wav')
+
+# Converting to mono
+if data.ndim > 1:
+    data = data.mean(axis=1)
 
 # Normalize
 if np.issubdtype(data.dtype, np.integer):
@@ -32,15 +36,13 @@ cwtmatr = np.abs(cwtmatr)
 
 # Perform FFT
 n = len(data)
-fft_freq_bins = np.fft.fftfreq(n, 1/fs)
+fft_freqs = np.fft.fftfreq(n, 1/fs)
 fft_data = np.fft.fft(data)
-#positive_freqs = fft_freqs[:n//2]
-#positive_fft = np.abs(fft_data[:n//2])
 
 # Plot the FFT
 fig, axs = plt.subplots(2, 1, figsize=(12, 8))
 
-axs[0].plot(fft_freq_bins, fft_data)
+axs[0].plot(fft_freqs[:n//2], np.abs(fft_data[:n//2]))
 axs[0].set_title("FFT of signal")
 axs[0].set_xlabel("Frequency (Hz)")
 axs[0].set_ylabel("Amplitude")
@@ -53,6 +55,5 @@ axs[1].set_xlabel("Time (s)")
 axs[1].set_ylabel("Frequency (Hz)")
 axs[1].set_title("Continuous Wavelet Transform (Scaleogram)")
 
-fig.colorbar(pcm, ax=axs[0])
 plt.tight_layout()
 plt.show()

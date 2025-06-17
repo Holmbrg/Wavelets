@@ -58,11 +58,11 @@ def main_denoise_tit(z: list[float], wavelet: str, uni_or_adap: str, hard_or_sof
 
     print('MSE = ' + str(MSE))
 
-    plt.plot(time ,denoised_audio)
-    plt.title('Great tit denoised, ' + str(hard_or_soft)+' ' + str(uni_or_adap)+'. ' + str(thresh)+'%, ' + str(wavelet))
-    plt.ylabel('Amplitude')
-    plt.xlabel('Time [s]')
-    plt.show()
+    #plt.plot(time ,denoised_audio)
+    #plt.title('Great tit denoised, ' + str(hard_or_soft)+' ' + str(uni_or_adap)+'. ' + str(thresh)+'%, ' + str(wavelet))
+    #plt.ylabel('Amplitude')
+    #plt.xlabel('Time [s]')
+    #plt.show()
 
     play_audio(denoised_audio)
     
@@ -316,9 +316,9 @@ def wft_tit(z: list[float], perc: float, noise_level_perc: float = 75) -> None:
         for j in range(len(t)):
             if abs(Zxx[i,j]) <= thresh:
                 Zxx[i,j] = 0
-##            else:                           #Comment out this else to use hard thresholding.
-##                angle = np.angle(Zxx[i,j])
-##                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
+            else:                           #Comment out this else to use hard thresholding.
+                angle = np.angle(Zxx[i,j])
+                Zxx[i,j] = (abs(Zxx[i,j]) - thresh) * np.exp(1j*angle)
 
                 
     t, denoised_audio = signal.istft(Zxx, samplerate, 'hann', nperseg=256, noverlap=256//2)
@@ -412,9 +412,9 @@ def next_power_of_two(n):
 
 
 # Load and prepare audio
-samplerate, data_office = wavfile.read("office_noise.wav")
-samplerate, data_speech = wavfile.read("speech.wav")
-samplerate, data_musvit = wavfile.read("musvit.wav")
+samplerate, data_office = wavfile.read(r'C:\Users\45298\Documents\GitHub\wavelet-cwt\samples\office_noise.wav')
+samplerate, data_speech = wavfile.read(r'C:\Users\45298\Documents\GitHub\wavelet-cwt\samples\speech.wav')
+samplerate, data_musvit = wavfile.read(r'C:\Users\45298\Documents\GitHub\wavelet-cwt\samples\musvit.wav')
 
 # Convert to mono if stereo
 if len(data_office.shape) > 1:
@@ -535,3 +535,7 @@ def detect_event(wavelet_coef: list[list[float]], thresh: float) -> list[list[in
     plt.show()
     
     return events
+
+# Run the programme
+main_denoise_tit(audio_musvit, 'db1', 'adap', 'soft')
+#wft_tit(audio_musvit, 1)
